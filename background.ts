@@ -1,45 +1,44 @@
 import { AUTO_CLOSE_TAB_RULES } from "./const";
 import { storageConfig } from "~store";
 
-// background.ts
 type TabInfo = {
   lastVisited: number;
   domain: string;
-  idleTime?: number; // 为每个tab设置独立的闲置时间
+  idleTime?: number;
 };
-
-
 
 const tabTimes: Record<number, TabInfo> = {};
 let currentTabId: number | null = null;
-let matchPattern: string; // Default to all URLs
-
-// 设置默认的空闲时间，单位是毫秒
-let defaultIdleTime = 5000;
-// chrome.storage.local.get(['closeTabsList'], function (result) {
-//   if (result.closeTabsList) {
-//     // todo
-//   }
-// });
-
-
+let rules: any[];
+const updateCurrentTabs = () => {
+  chrome.tabs.query({}, (tabs) => {
+    const now = Date.now(); // 获取当前时间
+    tabs.forEach((tab) => {
+      // 对每个tab进行处理
+      if (tab.id) {
+        const domain = new URL(tab.url || '').hostname; // 安全地读取URL，考虑到可能tab.url为空的情况
+        tabTimes[tab.id] = { lastVisited: now, domain }; // 更新或设置tabTimes中的信息
+      }
+    });
+    if (tabs.find(tab => tab.active)) {
+      // 如果存在活动标签，则更新currentTabId
+      currentTabId = tabs.find(tab => tab.active)?.id;
+    }
+  });
+}
 const main = async () => {
   const data = await storageConfig.instance.get(storageConfig.key) // "value"
-  console.log('data', data)
+  rules = data as any;
+  updateCurrentTabs()
 }
 
 main()
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
-  console.log('activeInfo', activeInfo)
-
   currentTabId = activeInfo.tabId;
   const now = Date.now();
-
-  // 更新新激活选项卡的最后访问时间
   tabTimes[currentTabId] = { ...tabTimes[currentTabId], lastVisited: now };
 
-  //更新其他标签页的最后访问时间，以防止立即关闭
   for (const tabIdStr in tabTimes) {
     const tabId = Number(tabIdStr);
     if (tabId !== currentTabId) {
@@ -53,9 +52,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 });
 
 function checkForIdleTabs() {
-  console.log('开始检查' + "=================" + Date.now());
-  console.log('tabTimes', tabTimes);
-  console.log(Object.keys(tabTimes).length, '有多少tab')
+  console.log('开始检查');
   const now = Date.now();
   const tabsToClose = [];
 
@@ -63,18 +60,18 @@ function checkForIdleTabs() {
     tabs.forEach((tab) => {
       const tabId = tab.id;
       const url = tab.url;
-      // 假设可以从URL中获取域名
       const domain = new URL(url).hostname;
-      console.log('domain', domain)
+      console.log('domain',domain)
+      if (!rules) return;
+      const rule = rules.find(rule => domain.includes(rule.match));
 
-      // 需要关闭的域名列表
-      const domainsToClose = [matchPattern];
-
-      if (domainsToClose.includes(domain)) {
+      if (rule) {
+        console.log('rule',rule)
         const tabInfo = tabTimes[tabId];
-        const diffTime = now - tabInfo.lastVisited
-        console.log('冷静时间：', diffTime)
-        if (tabId !== currentTabId && diffTime > defaultIdleTime) {
+        console.log('tabInfo',tabInfo)
+        const diffTime = now - tabInfo?.lastVisited
+        console.log('diffTime',diffTime)
+        if (tabId !== currentTabId && diffTime > parseInt(rule.time, 10)) {
           tabsToClose.push(tabId);
         }
       }
@@ -89,43 +86,15 @@ function checkForIdleTabs() {
   });
 }
 
+setInterval(checkForIdleTabs, 5000);
 
-// setInterval(checkForIdleTabs, 5000);
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.idleTime !== undefined) {
-    defaultIdleTime = request.idleTime;
-    chrome.storage.local.set({ idleTime: defaultIdleTime });
-  }
-  if (request.matchPattern) {
-    matchPattern = request.matchPattern;
-    chrome.storage.local.set({ matchPattern });
-  }
-});
-
-// Initialize tabTimes with idleTime on browser startup
-chrome.tabs.query({}, (tabs) => {
-  tabs.forEach((tab) => {
-    const url = tab.url;
-    // 假设可以从URL中获取域名
-    const domain = new URL(url).hostname;
-    console.log('domain', domain)
-    tabTimes[tab.id] = { lastVisited: Date.now(), domain };
-  });
-});
 
 storageConfig.instance.watch({
   [AUTO_CLOSE_TAB_RULES]: (c) => {
+    rules = c.newValue;
     console.log(c.newValue)
-  //   {
-  //     "id": "PLc0RWvFV-8tblh8iH",
-  //     "title": "google",
-  //     "time": "5000",
-  //     "match": "google",
-  //     "updatedAt": "2024-05-13T08:33:34.906Z",
-  //     "createdAt": "2024-05-13T08:33:30.694Z"
-  // }
   }
 });
-export { };
 
+export { };
