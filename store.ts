@@ -10,14 +10,26 @@ export const storageConfig = {
     copiedKeyList: [AUTO_CLOSE_TAB_RULES]
   })
 }
- 
 
-interface Type {
+
+interface OpenType {
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
 }
 
-export const useFormVisibleStore = create<Type>((set) => ({
+interface IdType {
+  id: string
+  setId: (id: string) => void
+}
+export const useFormVisibleStore = create<OpenType>((set) => ({
   isOpen: false,
-  setIsOpen: (isOpen:boolean) => set({ isOpen }),
+  setIsOpen: (isOpen: boolean) => set({ isOpen }),
 }))
+
+export const useCurrentIdStore = create<IdType>((set) => ({
+  id: "",
+  setId: (id: string) => set({ id }),
+}))
+
+
+export const defaultValueFunction = (v: any) => v ?? []

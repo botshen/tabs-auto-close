@@ -1,4 +1,4 @@
- 
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -7,16 +7,16 @@ import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { toast } from "@/components/ui/use-toast"
-import { useFormVisibleStore } from "~store"
+import { useStorage } from "@plasmohq/storage/hook"
 import { nanoid } from 'nanoid'
+import { useEffect } from "react"
+import { defaultValueFunction, storageConfig, useCurrentIdStore, useFormVisibleStore } from "~store"
 
 
 const FormSchema = z.object({
@@ -33,19 +33,49 @@ const FormSchema = z.object({
 
 export function RuleFormPage() {
   const { setIsOpen } = useFormVisibleStore()
-
+  const { id } = useCurrentIdStore()
+  const [rules, setRules] = useStorage<RuleType[]>(storageConfig, defaultValueFunction)
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       title: "",
-      time:"",
-      match:""
+      time: "",
+      match: ""
     },
   })
+  useEffect(() => {
+    const currentRule = rules.find(item => item.id === id);
+    if (currentRule) {
+      form.reset({
+        title: currentRule.title,
+        time: currentRule.time,
+        match: currentRule.match,
+      });
+    }
+  }, [rules]);
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log('data',data)
-    console.log('nanoid()',nanoid(18))
+    if (id) {
+      setRules(rules.map(item => item.id === id ? {
+        id: id,
+        title: data.title,
+        time: data.time,
+        match: data.match,
+        updatedAt: new Date().toISOString(),
+        createdAt: item.createdAt,
+      } : item))
+    } else {
+      setRules([{
+        id: nanoid(18),
+        title: data.title,
+        time: data.time,
+        match: data.match,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }, ...rules]);
+    }
+
+    setIsOpen(false)
   }
   const handleCancel = () => {
     setIsOpen(false)

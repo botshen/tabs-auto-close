@@ -8,71 +8,33 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useStorage } from "@plasmohq/storage/hook";
 import { CiEdit } from "react-icons/ci";
 import { IoMdAdd } from "react-icons/io";
 import { MdDeleteForever } from "react-icons/md";
 
 import { Button } from "~components/ui/button"
-import { useFormVisibleStore } from "~store";
+import { defaultValueFunction, storageConfig, useCurrentIdStore, useFormVisibleStore } from "~store";
 
-const invoices = [
-  {
-    invoice: "INV001",
-    paymentStatus: "Paid",
-    totalAmount: "$250.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV002",
-    paymentStatus: "Pending",
-    totalAmount: "$150.00",
-    paymentMethod: "PayPal",
-  },
-  {
-    invoice: "INV003",
-    paymentStatus: "Unpaid",
-    totalAmount: "$350.00",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    invoice: "INV004",
-    paymentStatus: "Paid",
-    totalAmount: "$450.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV005",
-    paymentStatus: "Paid",
-    totalAmount: "$550.00",
-    paymentMethod: "PayPal",
-  },
-  {
-    invoice: "INV006",
-    paymentStatus: "Pending",
-    totalAmount: "$200.00",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    invoice: "INV007",
-    paymentStatus: "Unpaid",
-    totalAmount: "$300.00",
-    paymentMethod: "Credit Card",
-  },
-]
+
 
 const RuleTable = () => {
   const { setIsOpen } = useFormVisibleStore()
+  const [rules, setRules] = useStorage<RuleType[]>(storageConfig, defaultValueFunction)
 
-  const handleEdit = () => {
-    console.log("edit")
+  const { setId } = useCurrentIdStore()
+
+
+  const handleEdit = (id: string) => {
+    setId(id)
     setIsOpen(true)
   }
 
-  const handleRemove = () => {
-    console.log("delete")
+  const handleRemove = (id: string) => {
+    setRules(rules.filter(rule => rule.id !== id))
   }
   const handleAdd = () => {
-    console.log("add")
+    setId("")
     setIsOpen(true)
   }
   return (
@@ -89,13 +51,13 @@ const RuleTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody >
-          {invoices.map((invoice) => (
-            <TableRow key={invoice.invoice}>
-              <TableCell className="font-medium">{invoice.invoice}</TableCell>
-              <TableCell>{invoice.paymentStatus}</TableCell>
+          {rules.map((rule) => (
+            <TableRow key={rule.id}>
+              <TableCell className="font-medium">{rule.title}</TableCell>
+              <TableCell>{rule.time}</TableCell>
               <TableCell className="text-right flex items-center justify-end gap-3">
-                <CiEdit className="h-5 w-5" onClick={handleEdit} />
-                <MdDeleteForever className="h-5 w-5" onClick={handleRemove} />
+                <CiEdit className="h-5 w-5" onClick={() => handleEdit(rule.id)} />
+                <MdDeleteForever className="h-5 w-5" onClick={() => handleRemove(rule.id)} />
               </TableCell>
             </TableRow>
           ))}
