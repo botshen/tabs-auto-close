@@ -2,9 +2,9 @@ import { useStorage } from "@plasmohq/storage/hook";
 import { useState } from "react";
 import { RuleFormPage } from "~rule-form";
 import RuleTable from "~rule-table";
-import { storageConfig } from "~store";
+import { storageConfig, useFormVisibleStore } from "~store";
 import "./style.css";
- 
+
 function IndexPopup() {
 
   const [rules, setRules] = useStorage(storageConfig)
@@ -12,13 +12,14 @@ function IndexPopup() {
     e.preventDefault();
 
   };
-  const [formVisible, setFormVisible] = useState(false);
+  const { isOpen } = useFormVisibleStore()
+
   return (
-    <div className="w-[400px] h-[300px] p-4 ">
+    <div className="w-[400px] h-[400px] p-4 ">
       {
-        formVisible ?
+        isOpen ?
           <RuleFormPage /> :
-          <RuleTable setFormVisible={setFormVisible} />
+          <RuleTable />
       }
     </div>
   );

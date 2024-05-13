@@ -1,5 +1,4 @@
-"use client"
-
+ 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -16,52 +15,85 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
+import { useFormVisibleStore } from "~store"
+import { nanoid } from 'nanoid'
+
 
 const FormSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
+  title: z.string().min(1, {
+    message: "Title must be at least 1 characters.",
+  }),
+  time: z.string().min(1, {
+    message: "Title must be at least 1 characters.",
+  }),
+  match: z.string().min(1, {
+    message: "Title must be at least 1 characters.",
   }),
 })
 
 export function RuleFormPage() {
+  const { setIsOpen } = useFormVisibleStore()
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      username: "",
+      title: "",
+      time:"",
+      match:""
     },
   })
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    })
+    console.log('data',data)
+    console.log('nanoid()',nanoid(18))
   }
-
+  const handleCancel = () => {
+    setIsOpen(false)
+  }
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-3">
         <FormField
           control={form.control}
-          name="username"
+          name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Title</FormLabel>
               <FormControl>
-                <Input placeholder="shadcn" {...field} />
+                <Input placeholder="Title" {...field} />
               </FormControl>
-              <FormDescription>
-                This is your public display name.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit">Submit</Button>
+        <FormField
+          control={form.control}
+          name="time"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Close Timeout</FormLabel>
+              <FormControl>
+                <Input placeholder="Close Timeout" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="match"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Match</FormLabel>
+              <FormControl>
+                <Input placeholder="Match" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" size="sm" className="mr-2">Submit</Button>
+        <Button variant="secondary" size="sm" onClick={handleCancel}>Cancel</Button>
       </form>
     </Form>
   )

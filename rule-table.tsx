@@ -13,6 +13,7 @@ import { IoMdAdd } from "react-icons/io";
 import { MdDeleteForever } from "react-icons/md";
 
 import { Button } from "~components/ui/button"
+import { useFormVisibleStore } from "~store";
 
 const invoices = [
   {
@@ -58,21 +59,25 @@ const invoices = [
     paymentMethod: "Credit Card",
   },
 ]
-type Props = {
-  setFormVisible: (isOpen: boolean) => void;
-}
-const RuleTable: React.FC<Props> = ({ setFormVisible }) => {
+
+const RuleTable = () => {
+  const { setIsOpen } = useFormVisibleStore()
+
   const handleEdit = () => {
     console.log("edit")
-    setFormVisible(true)
+    setIsOpen(true)
   }
 
   const handleRemove = () => {
     console.log("delete")
   }
+  const handleAdd = () => {
+    console.log("add")
+    setIsOpen(true)
+  }
   return (
     <>
-      <Button variant="outline" size="icon" className="mb-2">
+      <Button variant="outline" size="icon" className="mb-2" onClick={handleAdd}>
         <IoMdAdd className="h-5 w-5" />
       </Button>
       <Table >
