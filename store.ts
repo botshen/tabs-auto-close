@@ -32,4 +32,4 @@ export const useCurrentIdStore = create<IdType>((set) => ({
 }))
 
 
-export const defaultValueFunction = (v: any) => v ?? []
+export const defaultValueFunction = (v: RuleType[]) => v ?? []

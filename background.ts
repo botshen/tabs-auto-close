@@ -9,7 +9,7 @@ type TabInfo = {
 
 const tabTimes: Record<number, TabInfo> = {};
 let currentTabId: number | null = null;
-let rules: any[];
+let rules: RuleType[];
 const updateCurrentTabs = () => {
   chrome.tabs.query({}, (tabs) => {
     const now = Date.now(); // 获取当前时间
@@ -61,16 +61,16 @@ function checkForIdleTabs() {
       const tabId = tab.id;
       const url = tab.url;
       const domain = new URL(url).hostname;
-      console.log('domain',domain)
+      console.log('domain', domain)
       if (!rules) return;
       const rule = rules.find(rule => domain.includes(rule.match));
 
       if (rule) {
-        console.log('rule',rule)
+        console.log('rule', rule)
         const tabInfo = tabTimes[tabId];
-        console.log('tabInfo',tabInfo)
+        console.log('tabInfo', tabInfo)
         const diffTime = now - tabInfo?.lastVisited
-        console.log('diffTime',diffTime)
+        console.log('diffTime', diffTime)
         if (tabId !== currentTabId && diffTime > parseInt(rule.time, 10)) {
           tabsToClose.push(tabId);
         }
