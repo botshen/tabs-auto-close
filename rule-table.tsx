@@ -46,7 +46,7 @@ const RuleTable = () => {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px]">Title</TableHead>
-            <TableHead>Close Timeout</TableHead>
+            <TableHead>Close Timeout (min)</TableHead>
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
@@ -54,7 +54,7 @@ const RuleTable = () => {
           {rules.map((rule) => (
             <TableRow key={rule.id}>
               <TableCell className="font-medium">{rule.title}</TableCell>
-              <TableCell>{rule.time}</TableCell>
+              <TableCell>{(Number(rule.time) / 60000).toString()}</TableCell>
               <TableCell className="text-right flex items-center justify-end gap-3">
                 <CiEdit className="h-5 w-5" onClick={() => handleEdit(rule.id)} />
                 <MdDeleteForever className="h-5 w-5" onClick={() => handleRemove(rule.id)} />

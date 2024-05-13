@@ -1,12 +1,6 @@
 import { AUTO_CLOSE_TAB_RULES } from "./const";
 import { storageConfig } from "~store";
 
-type TabInfo = {
-  lastVisited: number;
-  domain: string;
-  idleTime?: number;
-};
-
 const tabTimes: Record<number, TabInfo> = {};
 let currentTabId: number | null = null;
 let rules: RuleType[];
@@ -50,38 +44,70 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   delete tabTimes[tabId];
 });
+function matchDomain(rule: RuleType, domain: string): boolean {
+  let matchExpression = rule.match;
+  console.log('domain', domain)
+  console.log('matchExpression', matchExpression)
+  // 如果使用正则表达式，则其他规则失效
+  if (rule.matchType.includes('regular')) {
+    try {
+      let regExp = new RegExp(matchExpression);
+      console.log('正则匹配的结果是', regExp.test(domain))
+      return regExp.test(domain);
+    } catch (e) {
+      console.error('Invalid regular expression:', matchExpression);
+      return false;
+    }
+  }
 
+  // 如果不区分大小写，则统一转换为小写
+  if (!rule.matchType.includes('case')) {
+    console.log('不区分大小写')
+    matchExpression = matchExpression.toLowerCase();
+    domain = domain.toLowerCase();
+  }
+  console.log('matchExpression', matchExpression)
+  console.log('domain', domain)
+  let matchResult = domain.includes(matchExpression);
+
+  // 如果要匹配整个单词
+  if (rule.matchType.includes('wholeWord')) {
+    console.log('=======')
+    console.log('rule.match', rule.match)
+    console.log('domain', domain)
+    console.log('rule.match === domain', rule.match === domain)
+    matchResult = rule.match === domain;
+  }
+
+  return matchResult;
+}
 function checkForIdleTabs() {
+  if (rules.length === 0) return;
   console.log('开始检查');
   const now = Date.now();
-  const tabsToClose = [];
-
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
       const tabId = tab.id;
       const url = tab.url;
-      const domain = new URL(url).hostname;
-      console.log('domain', domain)
-      if (!rules) return;
-      const rule = rules.find(rule => domain.includes(rule.match));
-
-      if (rule) {
-        console.log('rule', rule)
-        const tabInfo = tabTimes[tabId];
-        console.log('tabInfo', tabInfo)
-        const diffTime = now - tabInfo?.lastVisited
-        console.log('diffTime', diffTime)
-        if (tabId !== currentTabId && diffTime > parseInt(rule.time, 10)) {
-          tabsToClose.push(tabId);
-        }
+      const rule = rules.find(rule => matchDomain(rule, url));
+      if (!rule) {
+        console.log('rule,匹配失败')
+        return;
       }
-    });
-
-    tabsToClose.forEach((tabId) => {
-      chrome.tabs.remove(tabId, () => {
-        console.log(`Closed tab id ${tabId} due to inactivity.`);
-        delete tabTimes[tabId];
-      });
+      console.log('rule,匹配成功', rule, tabId)
+      const tabInfo = tabTimes[tabId];
+      console.log('tabInfo', tabInfo)
+      const diffTime = now - tabInfo?.lastVisited
+      console.log('diffTime', diffTime)
+      console.log('rule.time',rule.time)
+      const configTimeout = Number(rule.time)
+      console.log('configTimeout', configTimeout)
+      if (tabId !== currentTabId && diffTime > configTimeout) {
+        chrome.tabs.remove(tabId, () => {
+          console.log(`Closed tab id ${tabId} due to inactivity.`);
+          delete tabTimes[tabId];
+        });
+      }
     });
   });
 }

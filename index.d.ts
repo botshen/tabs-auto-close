@@ -3,6 +3,14 @@ type RuleType = {
   title: string;
   time: string;
   match: string;
-  createdAt:string;
-  updatedAt:string;
+  matchType: string[];
+  createdAt: string;
+  updatedAt: string;
 }
+
+type TabInfo = {
+  lastVisited: number;
+  domain: string;
+  idleTime?: number;
+};
+ 
