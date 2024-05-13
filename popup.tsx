@@ -1,26 +1,27 @@
-import { useState } from "react"
-
+import { useStorage } from "@plasmohq/storage/hook";
+import { useState } from "react";
+import { RuleFormPage } from "~rule-form";
+import RuleTable from "~rule-table";
+import { storageConfig } from "~store";
+import "./style.css";
+ 
 function IndexPopup() {
-  const [data, setData] = useState("")
 
+  const [rules, setRules] = useStorage(storageConfig)
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+  };
+  const [formVisible, setFormVisible] = useState(false);
   return (
-    <div
-      style={{
-        padding: 16
-      }}>
-      <h2>
-        Welcome to your{" "}
-        <a href="https://www.plasmo.com" target="_blank">
-          Plasmo
-        </a>{" "}
-        Extension!
-      </h2>
-      <input onChange={(e) => setData(e.target.value)} value={data} />
-      <a href="https://docs.plasmo.com" target="_blank">
-        View Docs
-      </a>
+    <div className="w-[400px] h-[300px] p-4 ">
+      {
+        formVisible ?
+          <RuleFormPage /> :
+          <RuleTable setFormVisible={setFormVisible} />
+      }
     </div>
-  )
-}
+  );
+};
 
 export default IndexPopup
