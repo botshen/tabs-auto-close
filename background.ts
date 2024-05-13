@@ -1,3 +1,4 @@
+import { AUTO_CLOSE_TAB_RULES } from "./const";
 import { storageConfig } from "~store";
 
 // background.ts
@@ -113,5 +114,18 @@ chrome.tabs.query({}, (tabs) => {
   });
 });
 
+storageConfig.instance.watch({
+  [AUTO_CLOSE_TAB_RULES]: (c) => {
+    console.log(c.newValue)
+  //   {
+  //     "id": "PLc0RWvFV-8tblh8iH",
+  //     "title": "google",
+  //     "time": "5000",
+  //     "match": "google",
+  //     "updatedAt": "2024-05-13T08:33:34.906Z",
+  //     "createdAt": "2024-05-13T08:33:30.694Z"
+  // }
+  }
+});
 export { };
 
