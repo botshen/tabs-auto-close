@@ -42,7 +42,7 @@ function matchDomain(rule: RuleType, domain: string): boolean {
   return matchResult;
 }
 async function createAlarmForTab(tab: chrome.tabs.Tab) {
-  console.log('createAlarmForTab', tab)
+  // console.log('createAlarmForTab', tab)
   if (!tab.url || !tab.id) {
     return;
   }
@@ -50,11 +50,12 @@ async function createAlarmForTab(tab: chrome.tabs.Tab) {
   const rule = rules.find((r) => matchDomain(r, tab.url));
 
   if (rule) {
+    console.log('rule', rule.time)
     // console.log('匹配成功',)
     // console.log('rule', rule)
     // console.log('tab.url', tab.url)
-    await chrome.alarms.create(String(tab.id), { delayInMinutes: 0.5 });
-    console.log('chrome.alarms.getAll()', await chrome.alarms.getAll())
+    await chrome.alarms.create(String(tab.id), { delayInMinutes: Number(rule.time) / 60000 });
+    // console.log('chrome.alarms.getAll()', await chrome.alarms.getAll())
   }
 }
 function closeTab(alarm: { name: string; }) {
@@ -62,7 +63,7 @@ function closeTab(alarm: { name: string; }) {
   chrome.tabs.query({}, (tabs) => {
     if (tabs.find(i => i.id === tabId)) {
       chrome.tabs.remove(tabId, () => {
-        console.log(`Closed tab id ${tabId} due to inactivity.`);
+        // console.log(`Closed tab id ${tabId} due to inactivity.`);
       });
     }
   });
@@ -77,9 +78,9 @@ const main = async () => {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     if (tabs.length > 0) {
       currentTab = tabs[0];
-      console.log('Initial active tab:', currentTab);
+      // console.log('Initial active tab:', currentTab);
     } else {
-      console.log('No active tab found during initialization.');
+      // console.log('No active tab found during initialization.');
     }
   });
   await chrome.alarms.clearAll()
@@ -93,7 +94,7 @@ storageConfig.instance.watch({
 });
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete') {
-    console.log('tab---onUpdated tab')
+    // console.log('tab---onUpdated tab')
     if (tab.active) {
       currentTab = tab;
     }

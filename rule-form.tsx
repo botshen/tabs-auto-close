@@ -81,7 +81,6 @@ export function RuleFormPage() {
   }, [rules]);
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log('data', data)
     if (id) {
       setRules(rules.map(item => item.id === id ? {
         id: id,
