@@ -82,8 +82,8 @@ function matchDomain(rule: RuleType, domain: string): boolean {
   return matchResult;
 }
 function checkForIdleTabs() {
-  if (rules.length === 0) return;
-  console.log('开始检查');
+  if (!rules || rules.length === 0) return;
+  console.log('===========开始检查==========');
   const now = Date.now();
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
@@ -99,7 +99,7 @@ function checkForIdleTabs() {
       console.log('tabInfo', tabInfo)
       const diffTime = now - tabInfo?.lastVisited
       console.log('diffTime', diffTime)
-      console.log('rule.time',rule.time)
+      console.log('rule.time', rule.time)
       const configTimeout = Number(rule.time)
       console.log('configTimeout', configTimeout)
       if (tabId !== currentTabId && diffTime > configTimeout) {
