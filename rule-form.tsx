@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input"
 import { useStorage } from "@plasmohq/storage/hook"
 import { nanoid } from 'nanoid'
 import { useEffect } from "react"
-import { defaultValueFunction, storageConfig, useCurrentIdStore, useFormVisibleStore } from "~store"
+import { defaultValueFunction, storageConfig, useCurrentIdStore, usePageVisibleStore } from "~store"
 import { Checkbox } from "~components/ui/checkbox"
 
 const items = [
@@ -55,7 +55,7 @@ const FormSchema = z.object({
 })
 
 export function RuleFormPage() {
-  const { setIsOpen } = useFormVisibleStore()
+  const { setOpenPage } = usePageVisibleStore()
   const { id } = useCurrentIdStore()
   const [rules, setRules] = useStorage<RuleType[]>(storageConfig, defaultValueFunction)
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -86,7 +86,7 @@ export function RuleFormPage() {
       setRules(rules.map(item => item.id === id ? {
         id: id,
         title: data.title,
-        time: (Number(data.time)*60000).toString(),
+        time: (Number(data.time) * 60000).toString(),
         match: data.match,
         matchType: data.matchType,
         updatedAt: new Date().toISOString(),
@@ -96,7 +96,7 @@ export function RuleFormPage() {
       setRules([{
         id: nanoid(18),
         title: data.title,
-        time: (Number(data.time)*60000).toString(),
+        time: (Number(data.time) * 60000).toString(),
         match: data.match,
         matchType: data.matchType,
         createdAt: new Date().toISOString(),
@@ -104,10 +104,10 @@ export function RuleFormPage() {
       }, ...rules]);
     }
 
-    setIsOpen(false)
+    setOpenPage('ruleList')
   }
   const handleCancel = () => {
-    setIsOpen(false)
+    setOpenPage("ruleList")
   }
   return (
     <Form {...form}>

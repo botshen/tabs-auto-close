@@ -1,16 +1,21 @@
 import { RuleFormPage } from "~rule-form";
 import RuleTable from "~rule-table";
-import { useFormVisibleStore } from "~store";
+import { usePageVisibleStore } from "~store";
 import "./style.css";
+import CountdownPage from "~rule-countdown";
 
-function IndexPopup() { 
-  const { isOpen } = useFormVisibleStore() 
+function IndexPopup() {
+  const { openPage } = usePageVisibleStore()
   return (
     <div className="w-[370px] h-[435px] p-4 ">
       {
-        isOpen ?
-          <RuleFormPage /> :
-          <RuleTable />
+        openPage === "ruleList" && <RuleTable />
+      }
+      {
+        openPage === "ruleForm" && <RuleFormPage />
+      }
+      {
+        openPage === "countdownList" && <CountdownPage />
       }
     </div>
   );

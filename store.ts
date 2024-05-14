@@ -13,17 +13,17 @@ export const storageConfig = {
 
 
 interface OpenType {
-  isOpen: boolean
-  setIsOpen: (isOpen: boolean) => void
+  openPage: string
+  setOpenPage: (openPage: string) => void
 }
 
 interface IdType {
   id: string
   setId: (id: string) => void
 }
-export const useFormVisibleStore = create<OpenType>((set) => ({
-  isOpen: false,
-  setIsOpen: (isOpen: boolean) => set({ isOpen }),
+export const usePageVisibleStore = create<OpenType>((set) => ({
+  openPage: 'ruleList',
+  setOpenPage: (openPage: string) => set({ openPage }),
 }))
 
 export const useCurrentIdStore = create<IdType>((set) => ({
