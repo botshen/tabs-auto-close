@@ -29,14 +29,35 @@ const CountdownPage = () => {
   // 添加一个状态来存储alarms信息
   const [alarms, setAlarms] = useState([]);
   const fetchAlarms = async () => {
-    const alarms = await chrome.alarms.getAll();
-    console.log('alarms', alarms)
-    setAlarms(alarms); // 更新状态以存储alarms信息
+    let alarmsData = await chrome.alarms.getAll();
+    let alarmsWithTabs = [];
+
+    for (let alarm of alarmsData) {
+      let tabId = parseInt(alarm.name);
+      try {
+        let tab = await new Promise((resolve, reject) => {
+          chrome.tabs.get(tabId, (tabInfo) => {
+            resolve(tabInfo);
+          });
+        });
+
+        if (tab) {
+          alarmsWithTabs.push({
+            alarm: alarm,
+            tab: tab // 添加tab信息到alarms数组中
+          })
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    setAlarms(alarmsWithTabs);
   };
+
   useEffect(() => {
-    // 当组件挂载时获取所有alarms
     fetchAlarms();
-  }, []); // 空依赖数组意味着这个effect仅在组件挂载时运行
+  }, []);
 
   // 将Unix时间戳转换为更易读的格式（时分秒）
   const formatTime = (timestamp) => {
@@ -60,15 +81,18 @@ const CountdownPage = () => {
       <Table >
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Alarm Name</TableHead>
+            {/* <TableHead className="w-[100px]">Alarm Name</TableHead> */}
+            <TableHead>Tab URL</TableHead>
+
             <TableHead className="text-right">Scheduled Time</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody >
-          {alarms.map((alarm) => (
+          {alarms.map(({ alarm, tab }) => (  // 从 alarms 对象中解构出 alarm 和 tab
             <TableRow key={alarm.id}>
-              <TableCell className="font-medium">{alarm.name}</TableCell>
-              <TableCell className="font-medium text-right">{formatTime(alarm.scheduledTime)}</TableCell>  
+              {/* <TableCell className="font-medium">{alarm.name}</TableCell> */}
+              <TableCell>{tab.url}</TableCell> {/* 显示 Tab URL信息 */}
+              <TableCell className="font-medium text-right">{formatTime(alarm.scheduledTime)}</TableCell>
             </TableRow>
           ))}
         </TableBody>
