@@ -47,7 +47,7 @@ async function createAlarmForTab(tab: chrome.tabs.Tab) {
     return;
   }
   // const domain = new URL(tab.url).hostname;
-  const rule = rules.find((r) => matchDomain(r, tab.url));
+  const rule = rules?.find((r) => matchDomain(r, tab.url));
 
   if (rule) {
     console.log('rule', rule.time)
