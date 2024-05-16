@@ -52,8 +52,7 @@ function calcMin(unit, time) {
   }
 }
 async function createAlarmForTab(tab: chrome.tabs.Tab) {
-  // console.log('createAlarmForTab', tab)
-  if (!tab.url || !tab.id) {
+  if (!tab.url || !tab.id || tab.pinned) {
     return;
   }
   // const domain = new URL(tab.url).hostname;
