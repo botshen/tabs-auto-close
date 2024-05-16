@@ -95,16 +95,20 @@ storageConfig.instance.watch({
   [AUTO_CLOSE_TAB_RULES]: async (c) => {
     rules = c.newValue;
 
-    // Now check all existing tabs against the new rules and set alarms where necessary
+    // 获取当前活跃的tab，以便在检查时跳过
+    const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const activeTabId = activeTabs.length > 0 ? activeTabs[0].id : null;
+
+    // 检查所有tab，跳过当前活跃的tab
     const allTabs = await chrome.tabs.query({});
     for (const tab of allTabs) {
-      if (!tab.url || tab.pinned) {
-        // If the tab doesn't have a URL (like a new tab) or is pinned, skip it
+      if (!tab.url || tab.pinned || tab.id === activeTabId) {
+        // 如果tab没有URL（比如一个新tab），被钉住，或者是当前活跃的tab，则跳过
         continue;
       }
-      const matchedRule = rules.find((r) => matchDomain(r, tab.url));
+      const matchedRule = rules.find((r) => matchDomain(r, (tab.url)));
       if (matchedRule) {
-        // Found a matching rule, create an alarm for this tab
+        // 找到匹配的规则，为这个tab创建一个alarm
         const delayInMinutes = calcMin(matchedRule.unit, matchedRule.time);
         await chrome.alarms.create(String(tab.id), { delayInMinutes });
       }
@@ -128,7 +132,7 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
   }
   chrome.tabs.get(activeInfo.tabId, function (tab) {
     currentTab = tab;
-  }); 
+  });
 });
 
 chrome.tabs.onRemoved.addListener(async function (tabId) {
