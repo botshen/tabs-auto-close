@@ -88,8 +88,8 @@ const CountdownPage = () => {
           </TableRow>
         </TableHeader>
         <TableBody >
-          {alarms.map(({ alarm, tab }) => (  // 从 alarms 对象中解构出 alarm 和 tab
-            <TableRow key={alarm.id}>
+          {alarms.length > 0 && alarms.map(({ alarm, tab }, index) => (
+            <TableRow key={alarm.id || index}>  
               <TableCell title={tab.url}>
                 <div className="truncate max-w-[150px] cursor-pointer">{tab.url}</div>
               </TableCell>

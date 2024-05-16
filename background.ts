@@ -4,6 +4,7 @@ console.log("background started")
 let rules: RuleType[];
 let currentTab: chrome.tabs.Tab;
 
+
 function matchDomain(rule: RuleType, domain: string): boolean {
   let matchExpression = rule.match;
   // console.log('domain', domain)
@@ -44,7 +45,7 @@ function matchDomain(rule: RuleType, domain: string): boolean {
 function calcMin(unit, time) {
   switch (unit) {
     case 'min':
-      return time;
+      return Number(time);
     case 'hour':
       return time * 60;
     case 'day':
@@ -78,46 +79,45 @@ const main = async () => {
   rules = data as any;
   // console.log('rules', rules)
   // console.log('chrome.alarms.getAll()', await chrome.alarms.getAll())
-
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    if (tabs.length > 0) {
-      currentTab = tabs[0];
-      // console.log('Initial active tab:', currentTab);
-    } else {
-      // console.log('No active tab found during initialization.');
-    }
-  });
+  const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  console.log('activeTabs-==============', activeTabs)
+  if (activeTabs.length > 0) {
+    currentTab = activeTabs[0];
+  }
   await chrome.alarms.clearAll()
 }
 
 main()
+async function checkAll() {
+  // 获取当前活跃的tab，以便在检查时跳过
+  const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const activeTabId = activeTabs.length > 0 ? activeTabs[0].id : null;
+
+  // 检查所有tab，跳过当前活跃的tab
+  const allTabs = await chrome.tabs.query({});
+  for (const tab of allTabs) {
+    if (!tab.url || tab.pinned || tab.id === activeTabId) {
+      // 如果tab没有URL（比如一个新tab），被钉住，或者是当前活跃的tab，则跳过
+      continue;
+    }
+    const matchedRule = rules.find((r) => matchDomain(r, (tab.url)));
+    if (matchedRule) {
+      // 找到匹配的规则，为这个tab创建一个alarm
+      const delayInMinutes = calcMin(matchedRule.unit, matchedRule.time);
+      console.log('32423442')
+      console.log('创建了tab2', tab.title)
+      await chrome.alarms.create(String(tab.id), { delayInMinutes });
+    }
+  }
+}
 storageConfig.instance.watch({
   [AUTO_CLOSE_TAB_RULES]: async (c) => {
-    rules = c.newValue;
-
-    // 获取当前活跃的tab，以便在检查时跳过
-    const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    const activeTabId = activeTabs.length > 0 ? activeTabs[0].id : null;
-
-    // 检查所有tab，跳过当前活跃的tab
-    const allTabs = await chrome.tabs.query({});
-    for (const tab of allTabs) {
-      if (!tab.url || tab.pinned || tab.id === activeTabId) {
-        // 如果tab没有URL（比如一个新tab），被钉住，或者是当前活跃的tab，则跳过
-        continue;
-      }
-      const matchedRule = rules.find((r) => matchDomain(r, (tab.url)));
-      if (matchedRule) {
-        // 找到匹配的规则，为这个tab创建一个alarm
-        const delayInMinutes = calcMin(matchedRule.unit, matchedRule.time);
-        await chrome.alarms.create(String(tab.id), { delayInMinutes });
-      }
-    }
+    rules = c.newValue; 
+    await checkAll()
   }
 });
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete') {
-    // console.log('tab---onUpdated tab')
     if (tab.active) {
       currentTab = tab;
     }
@@ -126,6 +126,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.alarms.onAlarm.addListener(closeTab);
 
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  console.log('chrome.tabs.onActivated activatedInfo:', activeInfo);
   await chrome.alarms.clear(String(activeInfo.tabId));
   if (currentTab) {
     await createAlarmForTab(currentTab);

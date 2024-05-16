@@ -22,7 +22,7 @@ interface IdType {
   setId: (id: string) => void
 }
 export const usePageVisibleStore = create<OpenType>((set) => ({
-  openPage: 'ruleList',
+  openPage: 'countdownList',
   setOpenPage: (openPage: string) => set({ openPage }),
 }))
 
