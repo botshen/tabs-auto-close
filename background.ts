@@ -60,6 +60,7 @@ async function createAlarmForTab(tab: chrome.tabs.Tab) {
   const rule = rules?.find((r) => matchDomain(r, tab.url));
 
   if (rule) {
+    console.log('可恶，创建了--')
     await chrome.alarms.create(String(tab.id), { delayInMinutes: Number(calcMin(rule.unit, rule.time)) });
   }
 }
@@ -85,6 +86,14 @@ const main = async () => {
     currentTab = activeTabs[0];
   }
   await chrome.alarms.clearAll()
+  await checkAll()
+  setTimeout(async () => {
+    // 获取当前打开的tab，把alarm删除掉,处理重新打开的情况
+    const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (activeTabs.length > 0) {
+      activeTabs[0].id && await chrome.alarms.clear(activeTabs[0].id.toString())
+    }
+  }, 1000)
 }
 
 main()
@@ -112,7 +121,7 @@ async function checkAll() {
 }
 storageConfig.instance.watch({
   [AUTO_CLOSE_TAB_RULES]: async (c) => {
-    rules = c.newValue; 
+    rules = c.newValue;
     await checkAll()
   }
 });
@@ -126,9 +135,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.alarms.onAlarm.addListener(closeTab);
 
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  const tab = await chrome.tabs.get(activeInfo.tabId);
+  if (tab.pinned) return;
   console.log('chrome.tabs.onActivated activatedInfo:', activeInfo);
   await chrome.alarms.clear(String(activeInfo.tabId));
   if (currentTab) {
+    console.log('纳尼？？', currentTab)
     await createAlarmForTab(currentTab);
   }
   chrome.tabs.get(activeInfo.tabId, function (tab) {
