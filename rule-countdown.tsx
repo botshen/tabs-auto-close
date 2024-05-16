@@ -59,14 +59,16 @@ const CountdownPage = () => {
     fetchAlarms();
   }, []);
 
-  // 将Unix时间戳转换为更易读的格式（时分秒）
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      hour12: false // 24小时制
+      hour12: false, // 24-hour format
     }).format(date);
   };
 
@@ -81,17 +83,16 @@ const CountdownPage = () => {
       <Table >
         <TableHeader>
           <TableRow>
-            {/* <TableHead className="w-[100px]">Alarm Name</TableHead> */}
             <TableHead>Tab URL</TableHead>
-
             <TableHead className="text-right">Scheduled Time</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody >
           {alarms.map(({ alarm, tab }) => (  // 从 alarms 对象中解构出 alarm 和 tab
             <TableRow key={alarm.id}>
-              {/* <TableCell className="font-medium">{alarm.name}</TableCell> */}
-              <TableCell>{tab.url}</TableCell> {/* 显示 Tab URL信息 */}
+              <TableCell title={tab.url}>
+                <div className="truncate max-w-[150px] cursor-pointer">{tab.url}</div>
+              </TableCell>
               <TableCell className="font-medium text-right">{formatTime(alarm.scheduledTime)}</TableCell>
             </TableRow>
           ))}

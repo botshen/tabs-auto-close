@@ -6,6 +6,7 @@ type RuleType = {
   matchType: string[];
   createdAt: string;
   updatedAt: string;
+  unit?: string;
 }
 
 type TabInfo = {
@@ -13,4 +14,4 @@ type TabInfo = {
   domain: string;
   idleTime?: number;
 };
- 
+

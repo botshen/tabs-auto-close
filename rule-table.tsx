@@ -20,12 +20,12 @@ import { defaultValueFunction, storageConfig, useCurrentIdStore, usePageVisibleS
 
 const RuleTable = () => {
   const { setOpenPage } = usePageVisibleStore()
-  const [rules, setRules] = useStorage<RuleType[]>(storageConfig, defaultValueFunction) 
-  const { setId } = useCurrentIdStore() 
+  const [rules, setRules] = useStorage<RuleType[]>(storageConfig, defaultValueFunction)
+  const { setId } = useCurrentIdStore()
   const handleEdit = (id: string) => {
     setId(id)
     setOpenPage('ruleForm')
-  } 
+  }
   const handleRemove = (id: string) => {
     setRules(rules.filter(rule => rule.id !== id))
   }
@@ -36,12 +36,12 @@ const RuleTable = () => {
   const handleCountdown = () => {
     setOpenPage('countdownList')
   }
-  
+
   return (
     <>
       <Button variant="outline" size="icon" className="mb-2 mr-2" onClick={handleAdd}>
         <IoMdAdd className="h-5 w-5" />
-      </Button> 
+      </Button>
       <Button variant="outline" size="icon" className="mb-2" onClick={handleCountdown}>
         <PiClockCountdownBold className="h-5 w-5" />
       </Button>
@@ -50,7 +50,8 @@ const RuleTable = () => {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px]">Title</TableHead>
-            <TableHead>Close Timeout (min)</TableHead>
+            <TableHead>Close Timeout</TableHead>
+            <TableHead>Unit</TableHead> 
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
@@ -58,7 +59,9 @@ const RuleTable = () => {
           {rules.map((rule) => (
             <TableRow key={rule.id}>
               <TableCell className="font-medium">{rule.title}</TableCell>
-              <TableCell>{(Number(rule.time) / 60000).toString()}</TableCell>
+              <TableCell>{rule.time.toString()}</TableCell>
+              <TableCell>{rule.unit}</TableCell>
+
               <TableCell className="text-right flex items-center justify-end gap-3">
                 <CiEdit className="h-5 w-5" onClick={() => handleEdit(rule.id)} />
                 <MdDeleteForever className="h-5 w-5" onClick={() => handleRemove(rule.id)} />

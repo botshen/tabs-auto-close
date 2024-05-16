@@ -41,6 +41,16 @@ function matchDomain(rule: RuleType, domain: string): boolean {
 
   return matchResult;
 }
+function calcMin(unit, time) {
+  switch (unit) {
+    case 'min':
+      return time;
+    case 'hour':
+      return time * 60;
+    case 'day':
+      return time * 60 * 24;
+  }
+}
 async function createAlarmForTab(tab: chrome.tabs.Tab) {
   // console.log('createAlarmForTab', tab)
   if (!tab.url || !tab.id) {
@@ -50,12 +60,8 @@ async function createAlarmForTab(tab: chrome.tabs.Tab) {
   const rule = rules?.find((r) => matchDomain(r, tab.url));
 
   if (rule) {
-    console.log('rule', rule.time)
-    // console.log('匹配成功',)
-    // console.log('rule', rule)
-    // console.log('tab.url', tab.url)
-    await chrome.alarms.create(String(tab.id), { delayInMinutes: Number(rule.time) / 60000 });
-    // console.log('chrome.alarms.getAll()', await chrome.alarms.getAll())
+    // console.log('匹配成功',) 
+    await chrome.alarms.create(String(tab.id), { delayInMinutes: Number(calcMin(rule.unit, rule.time)) });
   }
 }
 function closeTab(alarm: { name: string; }) {

@@ -16,6 +16,13 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { useStorage } from "@plasmohq/storage/hook"
 import { nanoid } from 'nanoid'
@@ -52,6 +59,10 @@ const FormSchema = z.object({
     message: "Title must be at least 1 characters.",
   }),
   matchType: z.array(z.string()).optional(),
+  //单位，一个选择器选择分钟，小时，天,选择的是个字符串
+  unit: z.string().min(1, {
+    message: "Title must be at least 1 characters.",
+  }),
 })
 
 export function RuleFormPage() {
@@ -65,6 +76,7 @@ export function RuleFormPage() {
       time: "",
       match: "",
       matchType: [],
+      unit: 'min'
     },
   })
 
@@ -73,21 +85,22 @@ export function RuleFormPage() {
     if (currentRule) {
       form.reset({
         title: currentRule.title,
-        time: (Number(currentRule.time) / 60000).toString(),
+        time: currentRule.time.toString(),
         match: currentRule.match,
-        matchType: currentRule.matchType
+        matchType: currentRule.matchType,
+        unit: currentRule.unit
       });
     }
-  }, [rules]);
-
+  }, [rules]); 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     if (id) {
       setRules(rules.map(item => item.id === id ? {
         id: id,
         title: data.title,
-        time: (Number(data.time) * 60000).toString(),
+        time: data.time,
         match: data.match,
         matchType: data.matchType,
+        unit: data.unit,
         updatedAt: new Date().toISOString(),
         createdAt: item.createdAt,
       } : item))
@@ -95,8 +108,9 @@ export function RuleFormPage() {
       setRules([{
         id: nanoid(18),
         title: data.title,
-        time: (Number(data.time) * 60000).toString(),
+        time: data.time,
         match: data.match,
+        unit: data.unit,
         matchType: data.matchType,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -129,10 +143,34 @@ export function RuleFormPage() {
           name="time"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Close Timeout (min)</FormLabel>
+              <FormLabel>Close Timeout</FormLabel>
               <FormControl>
-                <Input placeholder="Close Timeout (min)" {...field} />
+                <Input placeholder="Close Timeout" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="unit"
+          render={({ field }) => (
+            <FormItem>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a unit" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="min">min</SelectItem>
+                  <SelectItem value="hour">hour</SelectItem>
+                  <SelectItem value="day">day</SelectItem>
+                  {/* <SelectItem value="week">week</SelectItem>
+                  <SelectItem value="month">month</SelectItem>
+                  <SelectItem value="year">year</SelectItem>   */}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -192,6 +230,7 @@ export function RuleFormPage() {
             </FormItem>
           )}
         />
+
         <Button type="submit" size="sm" className="mr-2">Submit</Button>
         <Button variant="secondary" size="sm" onClick={handleCancel}>Cancel</Button>
       </form>
