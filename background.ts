@@ -59,7 +59,6 @@ async function createAlarmForTab(tab: chrome.tabs.Tab) {
   const rule = rules?.find((r) => matchDomain(r, tab.url));
 
   if (rule) {
-    // console.log('匹配成功',) 
     await chrome.alarms.create(String(tab.id), { delayInMinutes: Number(calcMin(rule.unit, rule.time)) });
   }
 }
@@ -93,8 +92,23 @@ const main = async () => {
 
 main()
 storageConfig.instance.watch({
-  [AUTO_CLOSE_TAB_RULES]: (c) => {
+  [AUTO_CLOSE_TAB_RULES]: async (c) => {
     rules = c.newValue;
+
+    // Now check all existing tabs against the new rules and set alarms where necessary
+    const allTabs = await chrome.tabs.query({});
+    for (const tab of allTabs) {
+      if (!tab.url || tab.pinned) {
+        // If the tab doesn't have a URL (like a new tab) or is pinned, skip it
+        continue;
+      }
+      const matchedRule = rules.find((r) => matchDomain(r, tab.url));
+      if (matchedRule) {
+        // Found a matching rule, create an alarm for this tab
+        const delayInMinutes = calcMin(matchedRule.unit, matchedRule.time);
+        await chrome.alarms.create(String(tab.id), { delayInMinutes });
+      }
+    }
   }
 });
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -114,10 +128,7 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
   }
   chrome.tabs.get(activeInfo.tabId, function (tab) {
     currentTab = tab;
-  });
-  // chrome.tabs.query({}, (tabs) => {
-  //   console.log('tabs', tabs.map(i => i.url + i.id))
-  // });
+  }); 
 });
 
 chrome.tabs.onRemoved.addListener(async function (tabId) {
