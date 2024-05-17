@@ -258,7 +258,7 @@ export function RuleFormPage() {
         />
 
         <Button type="submit" size="sm" className="mr-2">Submit</Button>
-        <Button variant="secondary" size="sm" onClick={handleCancel}>Cancel</Button>
+        <Button type="button" variant="secondary" size="sm" onClick={handleCancel}>Cancel</Button>
       </form>
     </Form>
   )

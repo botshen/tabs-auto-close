@@ -1,5 +1,6 @@
 import { storageConfig } from "~store";
 import { AUTO_CLOSE_TAB_RULES } from "./const";
+import { nanoid } from "nanoid";
 console.log("background started")
 let rules: RuleType[];
 let currentTab: chrome.tabs.Tab;
@@ -92,7 +93,7 @@ const main = async () => {
 main()
 async function checkAll() {
   await chrome.alarms.clearAll()
-  if (!rules) return;
+  if (!rules|| rules.length === 0) return;
   // 获取当前活跃的tab，以便在检查时跳过
   const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const activeTabId = activeTabs.length > 0 ? activeTabs[0].id : null;
@@ -106,6 +107,7 @@ async function checkAll() {
       // 如果tab没有URL（比如一个新tab），被钉住，或者是当前活跃的tab，则跳过
       continue;
     }
+    console.log('rules?????????',rules)
     const matchedRule = rules.find((r) => matchDomain(r, (tab.url)));
     if (matchedRule) {
       // 找到匹配的规则，为这个tab创建一个alarm
@@ -149,3 +151,27 @@ chrome.tabs.onRemoved.addListener(async function (tabId) {
   await chrome.alarms.clear(String(tabId));
 });
 
+chrome.runtime.onInstalled.addListener(async (details) => {
+  console.log('details', details)
+  if (details.reason === "install") {
+    console.log("扩展已安装。");
+    // 执行一些安装时需要进行的初始化操作
+    // 比如设置默认的本地存储值
+    await storageConfig.instance.set(storageConfig.key, [{
+      id: nanoid(18),
+      title: "All Pages",
+      time: "1",
+      match: ".",
+      unit: "day",
+      matchType: ["regular"],
+      switchOn: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }]) 
+  } else if (details.reason === "update") {
+    console.log("扩展已更新。");
+    console.log('details.previousVersion', details.previousVersion)
+    // 在这里处理更新事件，比如数据迁移或更新提示信息
+    // 根据details.previousVersion判断更新前的版本
+  }
+});
