@@ -29,6 +29,7 @@ import { nanoid } from 'nanoid'
 import { useEffect } from "react"
 import { defaultValueFunction, storageConfig, useCurrentIdStore, usePageVisibleStore } from "~store"
 import { Checkbox } from "~components/ui/checkbox"
+import { Switch } from "~components/ui/switch";
 
 const items = [
   {
@@ -63,6 +64,7 @@ const FormSchema = z.object({
   unit: z.string().min(1, {
     message: "Title must be at least 1 characters.",
   }),
+  switchOn: z.boolean()
 })
 
 export function RuleFormPage() {
@@ -76,7 +78,8 @@ export function RuleFormPage() {
       time: "",
       match: "",
       matchType: [],
-      unit: 'min'
+      unit: 'min',
+      switchOn: true,
     },
   })
 
@@ -88,10 +91,11 @@ export function RuleFormPage() {
         time: currentRule.time.toString(),
         match: currentRule.match,
         matchType: currentRule.matchType,
-        unit: currentRule.unit
+        unit: currentRule.unit,
+        switchOn: currentRule.switchOn,
       });
     }
-  }, [rules]); 
+  }, [rules]);
   function onSubmit(data: z.infer<typeof FormSchema>) {
     if (id) {
       setRules(rules.map(item => item.id === id ? {
@@ -103,6 +107,7 @@ export function RuleFormPage() {
         unit: data.unit,
         updatedAt: new Date().toISOString(),
         createdAt: item.createdAt,
+        switchOn: data.switchOn
       } : item))
     } else {
       setRules([{
@@ -112,6 +117,7 @@ export function RuleFormPage() {
         match: data.match,
         unit: data.unit,
         matchType: data.matchType,
+        switchOn: data.switchOn,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }, ...rules]);
@@ -127,6 +133,25 @@ export function RuleFormPage() {
       <form onSubmit={form.handleSubmit(onSubmit)} className=" space-y-2">
         <FormField
           control={form.control}
+          name="switchOn"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">
+                  Switch On
+                </FormLabel>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="title"
           render={({ field }) => (
             <FormItem>
@@ -138,6 +163,7 @@ export function RuleFormPage() {
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="time"

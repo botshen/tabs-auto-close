@@ -6,7 +6,8 @@ type RuleType = {
   matchType: string[];
   createdAt: string;
   updatedAt: string;
-  unit?: string;
+  unit: string;
+  switchOn: boolean;
 }
 
 type TabInfo = {

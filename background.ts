@@ -6,9 +6,10 @@ let currentTab: chrome.tabs.Tab;
 
 
 function matchDomain(rule: RuleType, domain: string): boolean {
+  if (!rule.switchOn) {
+    return false;
+  }
   let matchExpression = rule.match;
-  // console.log('domain', domain)
-  // console.log('matchExpression', matchExpression)
   // 如果使用正则表达式，则其他规则失效
   if (rule.matchType.includes('regular')) {
     try {
@@ -23,20 +24,13 @@ function matchDomain(rule: RuleType, domain: string): boolean {
 
   // 如果不区分大小写，则统一转换为小写
   if (!rule.matchType.includes('case')) {
-    // console.log('不区分大小写')
     matchExpression = matchExpression.toLowerCase();
     domain = domain.toLowerCase();
   }
-  // console.log('matchExpression', matchExpression)
-  // console.log('domain', domain)
   let matchResult = domain.includes(matchExpression);
 
   // 如果要匹配整个单词
   if (rule.matchType.includes('wholeWord')) {
-    // console.log('=======')
-    // console.log('rule.match', rule.match)
-    // console.log('domain', domain)
-    // console.log('rule.match === domain', rule.match === domain)
     matchResult = rule.match === domain;
   }
 
@@ -85,7 +79,6 @@ const main = async () => {
   if (activeTabs.length > 0) {
     currentTab = activeTabs[0];
   }
-  await chrome.alarms.clearAll()
   await checkAll()
   setTimeout(async () => {
     // 获取当前打开的tab，把alarm删除掉,处理重新打开的情况
@@ -98,12 +91,16 @@ const main = async () => {
 
 main()
 async function checkAll() {
+  await chrome.alarms.clearAll()
+  if (!rules) return;
   // 获取当前活跃的tab，以便在检查时跳过
   const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const activeTabId = activeTabs.length > 0 ? activeTabs[0].id : null;
 
   // 检查所有tab，跳过当前活跃的tab
   const allTabs = await chrome.tabs.query({});
+  console.log('rules', rules)
+
   for (const tab of allTabs) {
     if (!tab.url || tab.pinned || tab.id === activeTabId) {
       // 如果tab没有URL（比如一个新tab），被钉住，或者是当前活跃的tab，则跳过

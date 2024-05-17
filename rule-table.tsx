@@ -14,6 +14,8 @@ import { MdDeleteForever } from "react-icons/md";
 import { PiClockCountdownBold } from "react-icons/pi";
 
 import { Button } from "~components/ui/button";
+import { Badge } from "~components/ui/badge";
+
 import { defaultValueFunction, storageConfig, useCurrentIdStore, usePageVisibleStore } from "~store";
 
 
@@ -50,8 +52,8 @@ const RuleTable = () => {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px]">Title</TableHead>
-            <TableHead>Close Timeout</TableHead>
-            <TableHead>Unit</TableHead> 
+            <TableHead>Timeout</TableHead>
+            <TableHead>SwitchOn</TableHead>
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
@@ -59,9 +61,8 @@ const RuleTable = () => {
           {rules.map((rule) => (
             <TableRow key={rule.id}>
               <TableCell className="font-medium">{rule.title}</TableCell>
-              <TableCell>{rule.time.toString()}</TableCell>
-              <TableCell>{rule.unit}</TableCell>
-
+              <TableCell>{rule.time.toString() + " " + rule.unit}</TableCell>
+              <TableCell>{rule.switchOn ? <Badge variant="default">On</Badge> : <Badge variant="destructive">Off</Badge>}</TableCell>
               <TableCell className="text-right flex items-center justify-end gap-3">
                 <CiEdit className="h-5 w-5" onClick={() => handleEdit(rule.id)} />
                 <MdDeleteForever className="h-5 w-5" onClick={() => handleRemove(rule.id)} />
