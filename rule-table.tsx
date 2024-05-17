@@ -16,11 +16,12 @@ import { PiClockCountdownBold } from "react-icons/pi";
 import { Button } from "~components/ui/button";
 import { Badge } from "~components/ui/badge";
 
-import { defaultValueFunction, storageConfig, useCurrentIdStore, usePageVisibleStore } from "~store";
+import { defaultValueFunction, storageConfig, useCurrentIdStore, usePageVisibleStore, useVersionStore } from "~store";
 
 
 
 const RuleTable = () => {
+  const { version } = useVersionStore()
   const { setOpenPage } = usePageVisibleStore()
   const [rules, setRules] = useStorage<RuleType[]>(storageConfig, defaultValueFunction)
   const { setId } = useCurrentIdStore()
@@ -41,12 +42,17 @@ const RuleTable = () => {
 
   return (
     <>
-      <Button variant="outline" size="icon" className="mb-2 mr-2" onClick={handleAdd}>
-        <IoMdAdd className="h-5 w-5" />
-      </Button>
-      <Button variant="outline" size="icon" className="mb-2" onClick={handleCountdown}>
-        <PiClockCountdownBold className="h-5 w-5" />
-      </Button>
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-start items-center gap-2">
+          <Button variant="outline" size="icon" onClick={handleAdd}>
+            <IoMdAdd className="h-5 w-5" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={handleCountdown}>
+            <PiClockCountdownBold className="h-5 w-5" />
+          </Button>
+        </div>
+        <Badge variant="outline">v {version}</Badge>
+      </div>
 
       <Table >
         <TableHeader>

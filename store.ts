@@ -33,3 +33,8 @@ export const useCurrentIdStore = create<IdType>((set) => ({
 
 
 export const defaultValueFunction = (v: RuleType[]) => v ?? []
+
+export const useVersionStore = create(() => ({
+  version: chrome.runtime.getManifest().version
+}))
+
