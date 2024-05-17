@@ -1,7 +1,7 @@
 {
   "name": "auto-close-tab",
   "displayName": "Auto close tab",
-  "version": "0.0.3",
+  "version": "0.0.3.1",
   "description": "Auto Close Tab is a browser extension that automatically closes inactive tabs, keeping your browsing experience clean and organized.",
   "author": "botshen",
   "scripts": {
