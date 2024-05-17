@@ -91,9 +91,9 @@ const CountdownPage = () => {
           {alarms.length > 0 && alarms.map(({ alarm, tab }, index) => (
             <TableRow key={alarm.id || index}>  
               <TableCell title={tab.url}>
-                <div className="truncate max-w-[150px] cursor-pointer">{tab.url}</div>
+                <div className="truncate max-w-[190px] cursor-pointer">{tab.url}</div>
               </TableCell>
-              <TableCell className="font-medium text-right">{formatTime(alarm.scheduledTime)}</TableCell>
+              <TableCell className="w-[166px] font-medium text-right">{formatTime(alarm.scheduledTime)}</TableCell>
             </TableRow>
           ))}
         </TableBody>

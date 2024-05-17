@@ -57,7 +57,7 @@ const RuleTable = () => {
       <Table >
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Title</TableHead>
+            <TableHead>Title</TableHead>
             <TableHead>Timeout</TableHead>
             <TableHead>SwitchOn</TableHead>
             <TableHead className="text-right">Action</TableHead>
@@ -65,7 +65,7 @@ const RuleTable = () => {
         </TableHeader>
         <TableBody >
           {rules.map((rule) => (
-            <TableRow key={rule.id}>
+            <TableRow key={rule.id} >
               <TableCell className="font-medium">{rule.title}</TableCell>
               <TableCell>{rule.time.toString() + " " + rule.unit}</TableCell>
               <TableCell>{rule.switchOn ? <Badge variant="default">On</Badge> : <Badge variant="destructive">Off</Badge>}</TableCell>

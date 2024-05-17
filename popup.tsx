@@ -7,7 +7,7 @@ import CountdownPage from "~rule-countdown";
 function IndexPopup() {
   const { openPage } = usePageVisibleStore()
   return (
-    <div className="w-[370px] h-[600px] p-4 ">
+    <div className="min-w-[422px] h-[600px] p-4 ">
       {
         openPage === "ruleList" && <RuleTable />
       }

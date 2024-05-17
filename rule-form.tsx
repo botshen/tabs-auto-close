@@ -52,6 +52,8 @@ const items = [
 const FormSchema = z.object({
   title: z.string().min(1, {
     message: "Title must be at least 1 characters.",
+  }).max(20, {
+    message: "Title must be less than 20 characters.",
   }),
   time: z.string().min(1, {
     message: "time must be at least 1 characters.",
@@ -60,7 +62,6 @@ const FormSchema = z.object({
     message: "Title must be at least 1 characters.",
   }),
   matchType: z.array(z.string()).optional(),
-  //单位，一个选择器选择分钟，小时，天,选择的是个字符串
   unit: z.string().min(1, {
     message: "Title must be at least 1 characters.",
   }),
@@ -84,6 +85,7 @@ export function RuleFormPage() {
   })
 
   useEffect(() => {
+    if (!rules) return;
     const currentRule = rules.find(item => item.id === id);
     if (currentRule) {
       form.reset({
@@ -182,7 +184,7 @@ export function RuleFormPage() {
           name="unit"
           render={({ field }) => (
             <FormItem>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a unit" />
