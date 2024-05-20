@@ -30,6 +30,8 @@ import { useEffect } from "react"
 import { defaultValueFunction, storageConfig, useCurrentIdStore, usePageVisibleStore } from "~store"
 import { Checkbox } from "~components/ui/checkbox"
 import { Switch } from "~components/ui/switch";
+import { Slider } from "~components/ui/slider";
+import { Badge } from "~components/ui/badge";
 
 const items = [
   {
@@ -76,7 +78,7 @@ export function RuleFormPage() {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       title: "",
-      time: "",
+      time: "30",
       match: "",
       matchType: [],
       unit: 'min',
@@ -172,9 +174,18 @@ export function RuleFormPage() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Close Timeout</FormLabel>
-              <FormControl>
-                <Input placeholder="Close Timeout" {...field} />
-              </FormControl>
+              <div className="flex gap-4">
+                <FormControl  >
+                  <Slider
+                    defaultValue={[Number(field.value)]}
+                    max={60} step={1} min={1}
+                    onValueChange={(newValue) => field.onChange(newValue.toString())}
+                  /> 
+                </FormControl>
+                <div className="w-[30px] flex justify-center">
+                  <Badge > {field.value}</Badge>
+                </div>
+              </div> 
               <FormMessage />
             </FormItem>
           )}
@@ -194,9 +205,6 @@ export function RuleFormPage() {
                   <SelectItem value="min">min</SelectItem>
                   <SelectItem value="hour">hour</SelectItem>
                   <SelectItem value="day">day</SelectItem>
-                  {/* <SelectItem value="week">week</SelectItem>
-                  <SelectItem value="month">month</SelectItem>
-                  <SelectItem value="year">year</SelectItem>   */}
                 </SelectContent>
               </Select>
               <FormMessage />
