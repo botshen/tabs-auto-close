@@ -15,7 +15,6 @@ function matchDomain(rule: RuleType, domain: string): boolean {
   if (rule.matchType.includes('regular')) {
     try {
       let regExp = new RegExp(matchExpression);
-      // console.log('正则匹配的结果是', regExp.test(domain))
       return regExp.test(domain);
     } catch (e) {
       console.error('Invalid regular expression:', matchExpression);
@@ -47,37 +46,53 @@ function calcMin(unit, time) {
       return time * 60 * 24;
   }
 }
-const isDevMode = !('update_url' in chrome.runtime.getManifest());
+// const domain = new URL(tab.url).hostname;
 
-async function createAlarmForTab(tab: chrome.tabs.Tab) {
-  if (!tab.url || !tab.id || tab.pinned) {
-    return;
-  }
-  // const domain = new URL(tab.url).hostname;
-  const rule = rules?.find((r) => matchDomain(r, tab.url));
-
-  if (rule) {
-    console.log('可恶，创建了--')
-    await chrome.alarms.create(String(tab.id), { delayInMinutes: Number(calcMin(rule.unit, isDevMode ? 0.1 : rule.time)) });
+async function createAlarmForTab(tab: chrome.tabs.Tab, forOneTab: boolean = false) {
+  try {
+    if (forOneTab) {
+      if (!tab.pendingUrl || !tab.id || tab.pinned) {
+        throw new Error("Tab has invalid properties or is pinned.");
+      }
+    } else {
+      if (!tab.url || !tab.id || tab.pinned) {
+        throw new Error("Tab has invalid properties or is pinned.");
+      }
+    }
+    const domain = forOneTab ? tab.pendingUrl : tab.url;
+    const rule = rules?.find((r) => matchDomain(r, domain));
+    if (rule) {
+      await chrome.alarms.create(String(tab.id), { delayInMinutes: Number(calcMin(rule.unit, rule.time)) });
+      console.log("Alarm created for tab ID:", tab.id);
+    }
+  } catch (error) {
+    console.error("Failed to create an alarm for tab ID:", tab?.id, error);
   }
 }
-async function closeTab(alarm: { name: string; }) {
-  const tabId = Number(alarm.name);
-  const tabs = await chrome.tabs.query({})
-  const tab = tabs.find(i => i.id === tabId);
-  console.log('tab', tab)
-  if (!tab) return;
-  await chrome.tabs.remove(tabId)
-  const data = await storageHistoryConfig.instance.get(storageHistoryConfig.key) || []
-  const newData: HistoryRuleType = {
-    id: nanoid(18),
-    title: tab.title,
-    url: tab.url,
-    icon: tab.favIconUrl,
-    closeTime: new Date().toISOString(),
-  }
-  await storageHistoryConfig.instance.set(storageHistoryConfig.key, [newData, ...data])
 
+
+async function closeTab(alarm: { name: string }) {
+  try {
+    const tabId = Number(alarm.name);
+    const tabs = await chrome.tabs.query({});
+    const tab = tabs.find((i) => i.id === tabId);
+    if (!tab) throw new Error("Tab not found.");
+    
+    await chrome.tabs.remove(tabId);
+    console.log("Tab removed successfully:", tabId);
+
+    const data = (await storageHistoryConfig.instance.get(storageHistoryConfig.key)) || [];
+    const newData: HistoryRuleType = {
+      id: nanoid(18),
+      title: tab.title,
+      url: tab.url,
+      icon: tab.favIconUrl,
+      closeTime: new Date().toISOString(),
+    };
+    await storageHistoryConfig.instance.set(storageHistoryConfig.key, [newData, ...data]);
+  } catch (error) {
+    console.error("Failed to close tab on alarm:", error);
+  }
 }
 const main = async () => {
   const data = await storageConfig.instance.get(storageConfig.key)
@@ -107,18 +122,18 @@ async function checkAll() {
 
   // 检查所有tab，跳过当前活跃的tab
   const allTabs = await chrome.tabs.query({});
-  console.log('rules', rules)
 
   for (const tab of allTabs) {
     if (!tab.url || tab.pinned || tab.id === activeTabId) {
       // 如果tab没有URL（比如一个新tab），被钉住，或者是当前活跃的tab，则跳过
       continue;
     }
-    console.log('rules?????????', rules)
     const matchedRule = rules.find((r) => matchDomain(r, (tab.url)));
     if (matchedRule) {
       // 找到匹配的规则，为这个tab创建一个alarm
-      const delayInMinutes = calcMin(matchedRule.unit, isDevMode ? 0.1 : matchedRule.time);
+      const delayInMinutes = calcMin(matchedRule.unit, matchedRule.time);
+      console.log('可恶，创建了--2（checkAll）')
+
       await chrome.alarms.create(String(tab.id), { delayInMinutes });
     }
   }
@@ -147,6 +162,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.alarms.onAlarm.addListener(closeTab);
 
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  console.log('chrome.tabs.onActivated', activeInfo)
   const tab = await chrome.tabs.get(activeInfo.tabId);
   if (tab.pinned) return;
   console.log('chrome.tabs.onActivated activatedInfo:', activeInfo);
@@ -163,6 +179,18 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
 chrome.tabs.onRemoved.addListener(async function (tabId) {
   await chrome.alarms.clear(String(tabId));
 });
+chrome.tabs.onCreated.addListener(async (tab) => {
+  console.log('chrome.tabs.onCreated', tab)
+  const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  console.log('activeTabs', activeTabs)
+  const currentId = activeTabs.length > 0 ? activeTabs[0].id : null;
+  console.log('tab.id', tab.id)
+  console.log('currentId', currentId)
+  if (tab.id !== currentId) {
+    console.log('tab', tab)
+    await createAlarmForTab(tab, true);
+  }
+})
 
 chrome.runtime.onInstalled.addListener(async (details) => {
   console.log('details', details)
@@ -173,7 +201,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     await storageConfig.instance.set(storageConfig.key, [{
       id: nanoid(18),
       title: "All Pages",
-      time: "1",
+      time: 1,
       match: ".",
       unit: "day",
       matchType: ["regular"],
@@ -184,8 +212,16 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   } else if (details.reason === "update") {
     console.log("扩展已更新。");
     console.log('details.previousVersion', details.previousVersion)
-    // 在这里处理更新事件，比如数据迁移或更新提示信息
-    // 根据details.previousVersion判断更新前的版本
+    // 如果之前规则的time是字符串，都改成数值类型
+    const rules = await storageConfig.instance.get(storageConfig.key)
+    if (Array.isArray(rules)) {
+      rules.forEach(rule => {
+        if (typeof rule.time === 'string') {
+          rule.time = Number(rule.time);
+        }
+      });
+      await storageConfig.instance.set(storageConfig.key, rules)
+    }
   }
 });
 

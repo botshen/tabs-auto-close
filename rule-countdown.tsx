@@ -6,6 +6,12 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useEffect, useState } from "react";
 import { GrClear } from "react-icons/gr";
 import { IoArrowBackCircleOutline } from "react-icons/io5";
@@ -70,27 +76,37 @@ const CountdownPage = () => {
       <Button variant="outline" size="icon" className="mb-2 mr-2" onClick={handleClearAlarms}>
         <GrClear className="h-5 w-5" />
       </Button>
-      <Table >
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Tab URL</TableHead>
             <TableHead className="text-right">Scheduled Time</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody >
+        <TableBody>
           {alarms.length > 0 && alarms.map(({ alarm, tab }, index) => (
             <TableRow key={alarm.id || index}>
-              <div className="flex items-center gap-1">
-              {tab.favIconUrl ? <img className="w-4 h-4 inline-block" src={tab.favIconUrl} /> : ""}
-                <TableCell title={tab.url}>
-                  <div className="truncate max-w-[190px] cursor-pointer">{tab.url}</div>
-                </TableCell>
-              </div> 
-              <TableCell className="w-[166px] font-medium text-right">{formatTime(alarm.scheduledTime)}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1">
+                  {tab.favIconUrl ? <img className="w-4 h-4" src={tab.favIconUrl} /> : null}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="truncate max-w-[190px] cursor-pointer">{tab.title}</span>
+                      </TooltipTrigger>
+                      <TooltipContent >
+                        <p className="break-words max-w-[190px]">{tab.url}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </TableCell>
+              <TableCell className="w-[166px] font-medium text-right">
+                {formatTime(alarm.scheduledTime)}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
-
       </Table>
     </>
 

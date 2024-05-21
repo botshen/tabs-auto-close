@@ -22,8 +22,7 @@ import { Switch } from "~components/ui/switch";
 
 
 const RuleTable = () => {
-  const isDevMode = !('update_url' in chrome.runtime.getManifest());
-
+ 
   const { version } = useVersionStore()
   const { setOpenPage } = usePageVisibleStore()
   const [rules, setRules] = useStorage<RuleType[]>(storageConfig, defaultValueFunction)
