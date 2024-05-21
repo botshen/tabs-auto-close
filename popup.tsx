@@ -3,6 +3,7 @@ import RuleTable from "~rule-table";
 import { usePageVisibleStore } from "~store";
 import "./style.css";
 import CountdownPage from "~rule-countdown";
+import RuleRemovedPage from "~rule-removed";
 
 function IndexPopup() {
   const { openPage } = usePageVisibleStore()
@@ -16,6 +17,9 @@ function IndexPopup() {
       }
       {
         openPage === "countdownList" && <CountdownPage />
+      }
+      {
+        openPage === "removedList" && <RuleRemovedPage />
       }
     </div>
   );

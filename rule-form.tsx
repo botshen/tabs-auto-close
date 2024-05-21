@@ -57,7 +57,7 @@ const FormSchema = z.object({
   }).max(20, {
     message: "Title must be less than 20 characters.",
   }),
-  time: z.string().min(1, {
+  time: z.number().min(1, {
     message: "time must be at least 1 characters.",
   }),
   match: z.string().min(1, {
@@ -78,7 +78,7 @@ export function RuleFormPage() {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       title: "",
-      time: "30",
+      time: 10,
       match: "",
       matchType: [],
       unit: 'min',
@@ -89,10 +89,11 @@ export function RuleFormPage() {
   useEffect(() => {
     if (!rules) return;
     const currentRule = rules.find(item => item.id === id);
+    console.log('currentRule',currentRule)
     if (currentRule) {
       form.reset({
         title: currentRule.title,
-        time: currentRule.time.toString(),
+        time: currentRule.time,
         match: currentRule.match,
         matchType: currentRule.matchType,
         unit: currentRule.unit,
@@ -177,9 +178,9 @@ export function RuleFormPage() {
               <div className="flex gap-4">
                 <FormControl  >
                   <Slider
-                    defaultValue={[Number(field.value)]}
+                    value={[field.value]}
                     max={60} step={1} min={1}
-                    onValueChange={(newValue) => field.onChange(newValue.toString())}
+                    onValueChange={(value) => field.onChange(value[0])} 
                   /> 
                 </FormControl>
                 <div className="w-[30px] flex justify-center">

@@ -1,7 +1,7 @@
 type RuleType = {
   id: string;
   title: string;
-  time: string;
+  time: number;
   match: string;
   matchType: string[];
   createdAt: string;
@@ -16,3 +16,10 @@ type TabInfo = {
   idleTime?: number;
 };
 
+type HistoryRuleType = {
+  id: string;
+  icon: string;
+  url: string;
+  title: string;
+  closeTime: string; 
+}

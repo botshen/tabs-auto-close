@@ -1,5 +1,5 @@
 import { Storage } from "@plasmohq/storage"
-import { AUTO_CLOSE_TAB_RULES } from "~const"
+import { AUTO_CLOSE_TAB_RULES, AUTO_CLOSE_TAB_RULES_HISTORY } from "~const"
 import { create } from 'zustand'
 
 
@@ -10,6 +10,15 @@ export const storageConfig = {
     copiedKeyList: [AUTO_CLOSE_TAB_RULES]
   })
 }
+
+export const storageHistoryConfig = {
+  key: AUTO_CLOSE_TAB_RULES_HISTORY,
+  instance: new Storage({
+    area: "local",
+    copiedKeyList: [AUTO_CLOSE_TAB_RULES_HISTORY]
+  })
+}
+
 
 
 interface OpenType {

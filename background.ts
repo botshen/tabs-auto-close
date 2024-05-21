@@ -1,5 +1,5 @@
-import { storageConfig } from "~store";
-import { AUTO_CLOSE_TAB_RULES } from "./const";
+import { storageConfig, storageHistoryConfig } from "~store";
+import { AUTO_CLOSE_TAB_RULES, AUTO_CLOSE_TAB_RULES_HISTORY } from "./const";
 import { nanoid } from "nanoid";
 console.log("background started")
 let rules: RuleType[];
@@ -47,6 +47,8 @@ function calcMin(unit, time) {
       return time * 60 * 24;
   }
 }
+const isDevMode = !('update_url' in chrome.runtime.getManifest());
+
 async function createAlarmForTab(tab: chrome.tabs.Tab) {
   if (!tab.url || !tab.id || tab.pinned) {
     return;
@@ -56,27 +58,32 @@ async function createAlarmForTab(tab: chrome.tabs.Tab) {
 
   if (rule) {
     console.log('可恶，创建了--')
-    await chrome.alarms.create(String(tab.id), { delayInMinutes: Number(calcMin(rule.unit, rule.time)) });
+    await chrome.alarms.create(String(tab.id), { delayInMinutes: Number(calcMin(rule.unit, isDevMode ? 0.1 : rule.time)) });
   }
 }
-function closeTab(alarm: { name: string; }) {
+async function closeTab(alarm: { name: string; }) {
   const tabId = Number(alarm.name);
-  chrome.tabs.query({}, (tabs) => {
-    if (tabs.find(i => i.id === tabId)) {
-      chrome.tabs.remove(tabId, () => {
-        // console.log(`Closed tab id ${tabId} due to inactivity.`);
-      });
-    }
-  });
+  const tabs = await chrome.tabs.query({})
+  const tab = tabs.find(i => i.id === tabId);
+  console.log('tab', tab)
+  if (!tab) return;
+  await chrome.tabs.remove(tabId)
+  const data = await storageHistoryConfig.instance.get(storageHistoryConfig.key) || []
+  const newData: HistoryRuleType = {
+    id: nanoid(18),
+    title: tab.title,
+    url: tab.url,
+    icon: tab.favIconUrl,
+    closeTime: new Date().toISOString(),
+  }
+  await storageHistoryConfig.instance.set(storageHistoryConfig.key, [newData, ...data])
 
 }
 const main = async () => {
   const data = await storageConfig.instance.get(storageConfig.key)
   rules = data as any;
-  // console.log('rules', rules)
-  // console.log('chrome.alarms.getAll()', await chrome.alarms.getAll())
+  await storageHistoryConfig.instance.set(storageHistoryConfig.key, [])
   const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  console.log('activeTabs-==============', activeTabs)
   if (activeTabs.length > 0) {
     currentTab = activeTabs[0];
   }
@@ -93,7 +100,7 @@ const main = async () => {
 main()
 async function checkAll() {
   await chrome.alarms.clearAll()
-  if (!rules|| rules.length === 0) return;
+  if (!rules || rules.length === 0) return;
   // 获取当前活跃的tab，以便在检查时跳过
   const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const activeTabId = activeTabs.length > 0 ? activeTabs[0].id : null;
@@ -107,21 +114,27 @@ async function checkAll() {
       // 如果tab没有URL（比如一个新tab），被钉住，或者是当前活跃的tab，则跳过
       continue;
     }
-    console.log('rules?????????',rules)
+    console.log('rules?????????', rules)
     const matchedRule = rules.find((r) => matchDomain(r, (tab.url)));
     if (matchedRule) {
       // 找到匹配的规则，为这个tab创建一个alarm
-      const delayInMinutes = calcMin(matchedRule.unit, matchedRule.time);
-      console.log('32423442')
-      console.log('创建了tab2', tab.title)
+      const delayInMinutes = calcMin(matchedRule.unit, isDevMode ? 0.1 : matchedRule.time);
       await chrome.alarms.create(String(tab.id), { delayInMinutes });
     }
   }
+  const data = await storageHistoryConfig.instance.get(storageHistoryConfig.key) || []
+  chrome.action.setBadgeText({ text: data.length === 0 ? "" : data.length.toString() });
+
 }
 storageConfig.instance.watch({
   [AUTO_CLOSE_TAB_RULES]: async (c) => {
     rules = c.newValue;
     await checkAll()
+  }
+});
+storageHistoryConfig.instance.watch({
+  [AUTO_CLOSE_TAB_RULES_HISTORY]: async (c) => {
+    chrome.action.setBadgeText({ text: c.newValue.length === 0 ? "" : c.newValue.length.toString() });
   }
 });
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -167,7 +180,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
       switchOn: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    }]) 
+    }])
   } else if (details.reason === "update") {
     console.log("扩展已更新。");
     console.log('details.previousVersion', details.previousVersion)
@@ -175,3 +188,20 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     // 根据details.previousVersion判断更新前的版本
   }
 });
+
+// chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
+//   if (details.frameId === 0) { // 0表示顶级框架，即标签页本身
+//     chrome.tabs.query({}, function (tabs) {
+//       var existingTab = tabs.find(tab => tab.url === details.url);
+//       if (existingTab) {
+//         // 如果存在匹配的标签页，切换到该标签页
+//         chrome.tabs.update(existingTab.id, { active: true });
+
+//         // 关闭当前标签页（如果不是初始的空白页）
+//         if (details.tabId !== existingTab.id) {
+//           chrome.tabs.remove(details.tabId);
+//         }
+//       }
+//     });
+//   }
+// }, { url: [{ urlMatches: 'https?://*/*' }] });
