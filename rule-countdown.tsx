@@ -88,7 +88,7 @@ const CountdownPage = () => {
             <TableRow key={alarm.id || index}>
               <TableCell>
                 <div className="flex items-center gap-1">
-                  {tab.favIconUrl ? <img className="w-4 h-4" src={tab.favIconUrl} /> : null}
+                  {tab.favIconUrl ? <img className="w-4 h-4 inline-block" src={tab.favIconUrl} /> : ""}
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>

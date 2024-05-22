@@ -57,18 +57,18 @@ const RuleRemovedPage = () => {
               <TableCell>
                 <div className="flex items-center gap-1">
                   {rule.icon ? <img className="w-4 h-4 inline-block" src={rule.icon} /> : ""}
-                  <div className="text-[#234da7] truncate cursor-pointer  max-w-[190px] " onClick={() => handleOpenUrl(rule)}>
+                 
                     <TooltipProvider>
                       <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="max-w-[190px] cursor-pointer">{rule.title}</span>
+                        <TooltipTrigger asChild> 
+                          <span className=" text-[#234da7]  truncate max-w-[190px] cursor-pointer" onClick={() => handleOpenUrl(rule)}>{rule.title}</span>
                         </TooltipTrigger>
                         <TooltipContent >
                           <p className="break-words max-w-[190px]">{rule.url}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  </div>
+                   
                 </div>
               </TableCell>
               <TableCell className="w-[166px] font-medium text-right">{formatTime(rule.closeTime)}</TableCell>

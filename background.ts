@@ -66,7 +66,7 @@ async function createAlarmForTab(tab: chrome.tabs.Tab, forOneTab: boolean = fals
       console.log("Alarm created for tab ID:", tab.id);
     }
   } catch (error) {
-    console.error("Failed to create an alarm for tab ID:", tab?.id, error);
+    console.error("Failed to create an alarm for tab ID:", tab?.url, error);
   }
 }
 
